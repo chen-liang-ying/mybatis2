@@ -1,0 +1,80 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mobile263.yingbatis2.mapper.UserMapper"> 
+	<cache></cache>
+	
+	<!-- restMap 映射非驼峰命名 -->
+	<resultMap type="User" id="userMap" autoMapping="true">
+		<id column="user_id" property="userId"/>
+		<result column="user_name" property="userName"/>
+	</resultMap>
+	
+	<!-- 入参非 常规对象 -->
+	<select id="queryByNameAndAge" resultMap="userMap">
+		select * from tb_user where user_name like #{name} and age=#{age}
+	</select>
+	
+	<!--动态sql语句  -->
+	<select id="queryByUser" resultType="User">
+		select * from tb_user 
+		<where>
+			<if test="userName != null and userName != ''"> and user_name like #{userName}</if>
+			<if test="age != null"> and age=#{age}</if>
+		</where>
+	</select>
+	
+	<resultMap type="Order" id="OrderResultMap" autoMapping="true">
+		<id column="oid" property="oid"/>
+		<association property="user" javaType="User" autoMapping="true">
+			<id column="user_id" property="userId"/>
+		</association>
+	</resultMap>
+	
+	<!--一对一查询  -->
+	<select id="oneToOne" resultMap="OrderResultMap">
+		select tb_user.*,tb_order.* from tb_user,tb_order
+		where tb_user.user_id=tb_order.user_id order_number=#{orderNum}
+	</select>
+	
+	
+	<resultMap type="Order" id="OrderResultMap2" autoMapping="true" extends="OrderResultMap">
+	<!-- 注释表示resultMap使用继承，减少冗余 -->
+<!-- 		<id column="oid" property="oid"/>
+		<association property="user" javaType="User" autoMapping="true">
+			<id column="user_id" property="userId"/>
+		</association> -->
+		<collection property="details" javaType="list" ofType="OrderDetail" autoMapping="true">
+			<id column="detail_id" property="detailId"/>
+		</collection>
+	</resultMap>
+	<select id="oneToMany" resultMap="OrderResultMap2">
+		select tb_user.*,tb_order.*,tb_orderdetail.* from tb_user,tb_order,tb_orderdetail
+		where tb_user.user_id=tb_order.user_id and tb_order.oid=tb_orderdetail.order_id and order_number=#{orderNum}
+	</select>
+	
+	<resultMap type="Order" id="OrderResultMap3" autoMapping="true" extends="OrderResultMap">
+	<!-- 注释表示resultMap使用继承，减少冗余 -->
+<!-- 		<id column="oid" property="oid"/>
+		<association property="user" javaType="User" autoMapping="true">
+			<id column="user_id" property="userId"/>
+		</association> -->
+
+		<collection property="details" javaType="list" ofType="OrderDetail" autoMapping="true">
+			<id column="detail_id" property="detailId"/>
+			
+			<association property="product" javaType="Product" autoMapping="true">
+				<id column="pid" property="pid"/>
+			</association>
+		</collection>
+	</resultMap>
+	<select id="manyToMany" resultMap="OrderResultMap3">
+		select tb_user.*,tb_order.*,tb_orderdetail.*,tb_product.* from tb_user,tb_order,tb_orderdetail,tb_product
+		where tb_user.user_id=tb_order.user_id
+		and tb_order.oid=tb_orderdetail.order_id
+		and tb_orderdetail.product_id=tb_product.pid
+		and order_number=#{orderNum}
+	</select>
+	
+
+</mapper>
